@@ -21,3 +21,13 @@ hyperparameter_tuning.py
 eval_report.py
 test_api.py
 *.png
+
+# Dev/test-only — not needed in the serving image
+tests/
+load_tests/
+requirements-dev.txt
+requirements-load.txt
+pytest.ini
+.pytest_cache/
+htmlcov/
+.coverage

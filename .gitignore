@@ -9,7 +9,11 @@ __pycache__/
 .DS_Store
 .vscode/
 .idea/
+.pytest_cache/
+htmlcov/
+.coverage
+/tmp/loadtest*
 
-# NOTE: artifacts/ (churn_model.pkl, model_columns.json) is intentionally
+# NOTE: artifacts/ (churn_model.json, model_columns.json) is intentionally
 # NOT ignored — committed directly per the training/serving separation
 # decision. Small, stable, doesn't change on every commit.

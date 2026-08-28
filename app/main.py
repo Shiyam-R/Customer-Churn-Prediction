@@ -16,11 +16,14 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
+from slowapi import _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
 
 from app.api.routes import router
 from app.config import API_DESCRIPTION, API_TITLE, API_VERSION
 from app.exceptions import ChurnAPIError
 from app.model_loader import load_artifacts
+from app.rate_limiter import limiter
 from app.utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -59,6 +62,9 @@ def create_app() -> FastAPI:
         docs_url="/docs",
         redoc_url="/redoc",
     )
+
+    application.state.limiter = limiter
+    application.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
     # ── Centralised exception handler ─────────────────────────────────────────
     @application.exception_handler(ChurnAPIError)
