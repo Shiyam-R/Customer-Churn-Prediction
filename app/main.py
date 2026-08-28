@@ -11,14 +11,14 @@ Interactive docs:
     http://localhost:8000/redoc     — ReDoc
 """
 
+from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
-from typing import AsyncGenerator
 
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 
 from app.api.routes import router
-from app.config import API_TITLE, API_VERSION, API_DESCRIPTION
+from app.config import API_DESCRIPTION, API_TITLE, API_VERSION
 from app.exceptions import ChurnAPIError
 from app.model_loader import load_artifacts
 from app.utils.logger import get_logger

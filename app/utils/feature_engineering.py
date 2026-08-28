@@ -8,7 +8,6 @@ code. Encoding logic here must stay in lockstep with the training-side
 feature_engineering.py; any change there needs to be mirrored here.
 """
 
-import numpy as np
 import pandas as pd
 
 REDUNDANT_TERNARY_COLS = [

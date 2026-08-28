@@ -9,7 +9,8 @@ and fixed).
 """
 
 from typing import Literal
-from pydantic import BaseModel
+
+from pydantic import BaseModel, ConfigDict
 
 
 class CustomerRecord(BaseModel):
@@ -36,8 +37,8 @@ class CustomerRecord(BaseModel):
     MonthlyCharges: float
     TotalCharges: float
 
-    class Config:
-        json_schema_extra = {
+    model_config = ConfigDict(
+        json_schema_extra={
             "example": {
                 "gender": "Female", "SeniorCitizen": 0, "Partner": "Yes",
                 "Dependents": "No", "tenure": 2, "PhoneService": "Yes",
@@ -50,3 +51,4 @@ class CustomerRecord(BaseModel):
                 "MonthlyCharges": 85.0, "TotalCharges": 170.0,
             }
         }
+    )

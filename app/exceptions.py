@@ -6,7 +6,6 @@ code so main.py's exception handler can return a consistent structured
 JSON error without try/except boilerplate in the route itself.
 """
 
-from typing import Optional
 
 
 class ChurnAPIError(Exception):
@@ -16,7 +15,7 @@ class ChurnAPIError(Exception):
         self,
         message: str,
         status_code: int = 500,
-        detail: Optional[str] = None,
+        detail: str | None = None,
     ) -> None:
         super().__init__(message)
         self.message = message

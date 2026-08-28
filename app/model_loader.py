@@ -8,12 +8,12 @@ objects rather than reloading from disk (or worse, retraining) per request.
 
 import json
 from dataclasses import dataclass, field
-from typing import Any, List
+from typing import Any
 
 import shap
 from xgboost import XGBClassifier
 
-from app.config import MODEL_FILE, FEATURE_COLUMNS_FILE
+from app.config import FEATURE_COLUMNS_FILE, MODEL_FILE
 from app.exceptions import ArtifactLoadError
 from app.utils.logger import get_logger
 
@@ -23,7 +23,7 @@ logger = get_logger(__name__)
 @dataclass
 class ModelArtifacts:
     model: Any = None
-    feature_columns: List[str] = field(default_factory=list)
+    feature_columns: list[str] = field(default_factory=list)
     explainer: Any = None
     loaded: bool = False
 
@@ -34,8 +34,6 @@ artifacts = ModelArtifacts()
 
 def load_artifacts() -> ModelArtifacts:
     """Called once from main.py's lifespan context manager."""
-    global artifacts
-
     logger.info("Loading churn model artifacts...")
 
     if not MODEL_FILE.exists():

@@ -7,7 +7,7 @@ and this logic is testable/reusable without spinning up FastAPI at all.
 """
 
 from app.config import THRESHOLD
-from app.exceptions import ModelNotLoadedError, PreprocessingError, PredictionError
+from app.exceptions import ModelNotLoadedError, PredictionError, PreprocessingError
 from app.model_loader import artifacts
 from app.schemas.request import CustomerRecord
 from app.schemas.response import ContributingFactor, PredictionResponse
@@ -26,14 +26,14 @@ def predict_churn(record: CustomerRecord) -> PredictionResponse:
     try:
         X = prepare_inference_features(raw, artifacts.feature_columns)
     except Exception as exc:
-        logger.error("Preprocessing failed: %s", exc, exc_info=True)
+        logger.exception("Preprocessing failed")
         raise PreprocessingError(str(exc)) from exc
 
     try:
         proba = float(artifacts.model.predict_proba(X)[:, 1][0])
         shap_values = artifacts.explainer(X)
     except Exception as exc:
-        logger.error("Prediction failed: %s", exc, exc_info=True)
+        logger.exception("Prediction failed")
         raise PredictionError(str(exc)) from exc
 
     prediction = "Churn" if proba >= THRESHOLD else "No Churn"
