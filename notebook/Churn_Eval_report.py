@@ -11,7 +11,6 @@ Threshold: 0.285, chosen via cost-sensitive analysis (FN cost ~7x FP cost)
 on the validation set — never touched using test data.
 """
 
-import joblib
 import json
 import numpy as np
 import matplotlib.pyplot as plt
@@ -112,9 +111,13 @@ if __name__ == "__main__":
     run_shap_analysis(final_model, xgb_set["X_train"], xgb_set["X_test"])
 
     # --- Persist the model artifact for the API ---
-    # Saves the model + its exact training column list (order matters —
-    # see prepare_inference_features in feature_engineering.py for why).
-    joblib.dump(final_model, "artifacts/churn_model.pkl")
+    # Uses XGBoost's NATIVE save format, not pickle/joblib. Pickle serializes
+    # internal version-check metadata that isn't guaranteed compatible across
+    # environments (dev sandbox -> Docker -> Render each count as a new
+    # environment) — XGBoost's own docs recommend save_model()/load_model()
+    # specifically to avoid this. See the UserWarning this used to produce:
+    # "please export the model by calling Booster.save_model() ... first"
+    final_model.save_model("artifacts/churn_model.json")
     with open("artifacts/model_columns.json", "w") as f:
         json.dump(xgb_set["X_train"].columns.tolist(), f)
-    print("\nSaved churn_model.pkl and model_columns.json for API use.")
+    print("\nSaved churn_model.json (native XGBoost format) and model_columns.json for API use.")

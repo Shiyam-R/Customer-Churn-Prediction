@@ -15,7 +15,7 @@ API_DESCRIPTION = (
 )
 
 ARTIFACTS_DIR = Path(__file__).resolve().parent.parent / "artifacts"
-MODEL_FILE = ARTIFACTS_DIR / "churn_model.pkl"
+MODEL_FILE = ARTIFACTS_DIR / "churn_model.json"
 FEATURE_COLUMNS_FILE = ARTIFACTS_DIR / "model_columns.json"
 
 # Cost-sensitive threshold — FN cost (missed churner) ~7x FP cost (unneeded

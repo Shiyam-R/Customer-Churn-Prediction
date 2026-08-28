@@ -10,8 +10,8 @@ import json
 from dataclasses import dataclass, field
 from typing import Any, List
 
-import joblib
 import shap
+from xgboost import XGBClassifier
 
 from app.config import MODEL_FILE, FEATURE_COLUMNS_FILE
 from app.exceptions import ArtifactLoadError
@@ -39,12 +39,13 @@ def load_artifacts() -> ModelArtifacts:
     logger.info("Loading churn model artifacts...")
 
     if not MODEL_FILE.exists():
-        raise ArtifactLoadError("churn_model.pkl", f"File not found: {MODEL_FILE}")
+        raise ArtifactLoadError("churn_model.json", f"File not found: {MODEL_FILE}")
     try:
-        model = joblib.load(MODEL_FILE)
+        model = XGBClassifier()
+        model.load_model(MODEL_FILE)
         logger.info("  Model loaded (%s)", MODEL_FILE.name)
     except Exception as exc:
-        raise ArtifactLoadError("churn_model.pkl", str(exc)) from exc
+        raise ArtifactLoadError("churn_model.json", str(exc)) from exc
 
     if not FEATURE_COLUMNS_FILE.exists():
         raise ArtifactLoadError("model_columns.json", f"File not found: {FEATURE_COLUMNS_FILE}")
