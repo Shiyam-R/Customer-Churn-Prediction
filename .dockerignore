@@ -1,0 +1,23 @@
+.git
+.gitignore
+venv/
+env/
+__pycache__/
+*.pyc
+.env
+*.md
+*.ipynb
+.vscode/
+.idea/
+
+# Training-only files — never needed in the serving image
+notebook/
+telco_churn.csv
+prepare_data.py
+eda_only.py
+feature_engineering.py
+model_selection.py
+hyperparameter_tuning.py
+eval_report.py
+test_api.py
+*.png
