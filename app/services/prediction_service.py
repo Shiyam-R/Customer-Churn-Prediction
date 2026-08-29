@@ -7,6 +7,7 @@ and this logic is testable/reusable without spinning up FastAPI at all.
 """
 
 from app.config import THRESHOLD
+from app.drift_tracker import record_request
 from app.exceptions import ModelNotLoadedError, PredictionError, PreprocessingError
 from app.model_loader import artifacts
 from app.schemas.request import CustomerRecord
@@ -28,6 +29,11 @@ def predict_churn(record: CustomerRecord) -> PredictionResponse:
     except Exception as exc:
         logger.exception("Preprocessing failed")
         raise PreprocessingError(str(exc)) from exc
+
+    # Record the exact feature vector the model saw, for /drift — after
+    # preprocessing succeeds, before prediction (a preprocessing failure
+    # never happened as far as the model's concerned, so nothing to record).
+    record_request(X.iloc[0])
 
     try:
         proba = float(artifacts.model.predict_proba(X)[:, 1][0])

@@ -53,14 +53,15 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Build Docker image
-        run: docker build -t churn-api:ci-test .
+        run: docker build --build-arg GIT_SHA=${{ github.sha }} -t churn-api:ci-test .
 
-      - name: Verify container starts and /health responds
+      - name: Verify container starts and /health, /version respond
         run: |
           docker run -d -p 8000:8000 --name churn-api-test churn-api:ci-test
           sleep 8
           docker logs churn-api-test
           curl --fail http://127.0.0.1:8000/health || (docker logs churn-api-test && exit 1)
+          curl --fail http://127.0.0.1:8000/version || (docker logs churn-api-test && exit 1)
           docker stop churn-api-test
 
   publish-and-deploy:
@@ -91,6 +92,8 @@ jobs:
         with:
           context: .
           push: true
+          build-args: |
+            GIT_SHA=${{ github.sha }}
           tags: |
             ${{ env.IMAGE_NAME }}:latest
             ${{ env.IMAGE_NAME }}:${{ github.sha }}

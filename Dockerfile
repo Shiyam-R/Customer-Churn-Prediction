@@ -23,6 +23,14 @@ WORKDIR /home/appuser/app
 COPY --from=builder /root/.local /home/appuser/.local
 ENV PATH=/home/appuser/.local/bin:$PATH
 
+# Build identity for /version — injected at build time via
+# `docker build --build-arg GIT_SHA=...` (ci.yml's publish-and-deploy job
+# passes github.sha automatically). Falls back to "unknown" for a manual
+# local `docker build` with no arg passed.
+ARG GIT_SHA=unknown
+ENV GIT_SHA=${GIT_SHA}
+ENV ENVIRONMENT=production
+
 # Only what the SERVING app needs — training scripts, notebooks, the raw
 # dataset, and dev-only files never enter the image at all.
 COPY app/ ./app/

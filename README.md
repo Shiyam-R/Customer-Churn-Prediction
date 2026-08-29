@@ -63,12 +63,13 @@ Customer-Churn-Prediction/
 │   ├── exceptions.py                # custom exception hierarchy
 │   ├── model_loader.py              # artifact loading singleton
 │   ├── rate_limiter.py              # slowapi Limiter instance
+│   ├── drift_tracker.py             # in-memory live-request buffer + PSI computation
 │   ├── api/routes.py                # /predict, /health
 │   ├── schemas/{request,response}.py
 │   ├── services/prediction_service.py
 │   └── utils/{feature_engineering,logger}.py
-├── artifacts/                       # churn_model.json (native XGBoost format), model_columns.json
-├── tests/                           # pytest suite (21 tests)
+├── artifacts/                       # churn_model.json, model_columns.json, model_metadata.json, baseline_stats.json
+├── tests/                           # pytest suite (26 tests)
 ├── load_tests/                      # Locust + measured results
 ├── reports/                         # EDA charts, PR curve, confusion matrices, SHAP summary
 ├── prepare_data.py                  # load, clean, stratified split
@@ -125,12 +126,23 @@ docker run -p 8000:8000 churn-api
 
 | Method | Endpoint | Purpose |
 |---|---|---|
-| `POST` | `/predict` | Returns churn prediction + per-request SHAP explanation |
+| `GET` | `/` | Project metadata and available endpoints |
 | `GET` | `/health` | Reports whether the model artifact loaded successfully |
+| `GET` | `/version` | Reports API/model version, when the current model was trained, build git SHA, and environment |
+| `GET` | `/drift` | Feature-distribution drift (PSI) between recent live requests and training data — see caveat below |
+| `POST` | `/predict` | Returns churn prediction + per-request SHAP explanation |
+
+`/drift` tracks live requests in an in-process buffer. **Scope caveat**:
+under a multi-worker deployment, each worker has its own separate
+buffer — `/drift` only reflects whichever worker answers that specific
+request, not a combined view across all workers. Currently deployed as a
+single worker (no `--workers` flag in the Dockerfile `CMD`), so this is
+dormant, but would need a shared store (e.g. Redis) before scaling out.
 
 The full request/response schema — including every field, its valid
 values, and validation rules — is generated automatically from the
-Pydantic models and browsable at `/docs`. A real captured example:
+Pydantic models and browsable at `/docs`. A real captured example for
+`/predict`:
 
 ```json
 {
@@ -167,13 +179,15 @@ unseen value (e.g. `PaymentMethod: "Cryptocurrency"`) is rejected with a
 
 ## Configuration
 
-Currently hardcoded in `app/config.py` — no environment-variable overrides
-implemented yet (unlike a 12-factor setup with a `.env.example`):
+Currently hardcoded in `app/config.py`, plus two values injected at build
+time — no `.env.example`-based override system implemented yet:
 
 | Setting | Value | Purpose |
 |---|---|---|
 | `THRESHOLD` | `0.285` | Cost-sensitive decision threshold |
 | `PREDICT_RATE_LIMIT` | `30/minute` | Per-client limit on `/predict` (SHAP runs per request — real compute cost) |
+| `GIT_SHA` | Docker build-arg | Injected via `docker build --build-arg GIT_SHA=...` (ci.yml passes `github.sha` automatically); `"unknown"` for a bare local build |
+| `ENVIRONMENT` | `production` in Docker, `development` locally | Set via `ENV` in the Dockerfile; falls back to `development` when unset |
 
 ## Testing
 
@@ -181,12 +195,15 @@ implemented yet (unlike a 12-factor setup with a `.env.example`):
 pytest
 ```
 
-21 tests: encoding/feature logic (including the training-serving skew
+26 tests: encoding/feature logic (including the training-serving skew
 guardrail), schema validation (including the unseen-category rejection),
-service-layer error paths, and API-level integration tests including the
-rate limiter actually triggering under load.
-
-## Security
+service-layer error paths, API-level integration tests including the
+rate limiter actually triggering under load, and the `/`, `/version`,
+`/drift` endpoints — including a real bug caught while writing these
+(quantile binning silently collapsing binary features to a single bin;
+fixed in `eval_report.py`'s `compute_baseline_stats`, and the rate
+limiter's shared state across tests, fixed via an autouse reset fixture
+in `conftest.py`).
 
 ```bash
 pip install pip-audit

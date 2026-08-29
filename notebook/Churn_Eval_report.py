@@ -12,6 +12,8 @@ on the validation set — never touched using test data.
 """
 
 import json
+from datetime import datetime, timezone
+
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
@@ -24,6 +26,7 @@ import shap
 from Churn_Feature_engineering import build_feature_sets
 
 FINAL_THRESHOLD = 0.285
+MODEL_VERSION = "1.0.0"
 BEST_PARAMS = {
     "subsample": 0.8, "n_estimators": 300, "min_child_weight": 3,
     "max_depth": 3, "learning_rate": 0.03, "gamma": 0.1, "colsample_bytree": 0.7,
@@ -97,6 +100,40 @@ def run_shap_analysis(model, X_train, X_test):
     return shap_values
 
 
+def compute_baseline_stats(X_train, n_bins: int = 10, low_cardinality_threshold: int = 10) -> dict:
+    """
+    Per-feature binned baseline distribution for /drift's PSI calculation.
+
+    Low-cardinality columns (binary 0/1, ordinal Contract 0/1/2,
+    num_services 0-6) are binned on their EXACT unique values, not
+    quantiles — quantile binning (qcut) degenerates to a single bin on
+    skewed or few-valued data (verified: it did exactly this for `gender`
+    before this fix, silently making drift detection useless for most
+    columns). Genuinely continuous columns (tenure, MonthlyCharges,
+    TotalCharges) use quantile bins as intended.
+    """
+    import pandas as pd
+
+    stats = {}
+    for col in X_train.columns:
+        n_unique = X_train[col].nunique()
+
+        if n_unique <= low_cardinality_threshold:
+            unique_vals = sorted(X_train[col].unique())
+            edges = [unique_vals[0] - 0.5] + [v + 0.5 for v in unique_vals]
+        else:
+            try:
+                _, qcut_edges = pd.qcut(X_train[col], q=n_bins, duplicates="drop", retbins=True)
+            except ValueError:
+                continue
+            edges = qcut_edges.tolist()
+
+        binned = pd.cut(X_train[col], bins=edges, include_lowest=True)
+        proportions = binned.value_counts(normalize=True, sort=False).to_numpy().tolist()
+        stats[col] = {"bin_edges": edges, "baseline_proportions": proportions}
+    return stats
+
+
 if __name__ == "__main__":
     logreg_set, xgb_set = build_feature_sets()
 
@@ -117,7 +154,30 @@ if __name__ == "__main__":
     # environment) — XGBoost's own docs recommend save_model()/load_model()
     # specifically to avoid this. See the UserWarning this used to produce:
     # "please export the model by calling Booster.save_model() ... first"
-    final_model.save_model("artifacts/churn_model.json")
-    with open("artifacts/model_columns.json", "w") as f:
+    final_model.save_model("churn_model.json")
+    with open("model_columns.json", "w") as f:
         json.dump(xgb_set["X_train"].columns.tolist(), f)
-    print("\nSaved churn_model.json (native XGBoost format) and model_columns.json for API use.")
+
+    # Model metadata — powers /version's "when was the current model
+    # trained" reporting. GIT_SHA/build identity is injected separately,
+    # at Docker build time (see Dockerfile + ci.yml), not here — this
+    # script only knows about the MODEL, not the eventual deployment.
+    test_recall = recall_score(xgb_set["y_test"], preds)
+    test_precision = precision_score(xgb_set["y_test"], preds)
+    metadata = {
+        "model_version": MODEL_VERSION,
+        "trained_at": datetime.now(timezone.utc).isoformat(),
+        "test_recall": round(float(test_recall), 4),
+        "test_precision": round(float(test_precision), 4),
+        "threshold": FINAL_THRESHOLD,
+    }
+    with open("model_metadata.json", "w") as f:
+        json.dump(metadata, f, indent=2)
+
+    # Baseline feature distributions — powers /drift's PSI computation.
+    baseline_stats = compute_baseline_stats(xgb_set["X_train"])
+    with open("baseline_stats.json", "w") as f:
+        json.dump(baseline_stats, f)
+
+    print("\nSaved churn_model.json, model_columns.json, model_metadata.json, "
+          "and baseline_stats.json for API use.")
