@@ -29,7 +29,11 @@ THRESHOLD = 0.285
 # computation, not just a cheap predict_proba() call. This is a security/
 # cost consideration, not a UX one: unrestricted hammering of this endpoint
 # is a real resource-exhaustion vector given the per-request compute cost.
-PREDICT_RATE_LIMIT = "30/minute"
+# Configurable via env var — measured latency is only ~3-23ms/request even
+# under concurrent load (see load_tests/LOAD_TEST_RESULTS.md), so 100/min
+# is still conservative, not a bottleneck. Override for load testing with
+# a different concurrency profile, e.g. PREDICT_RATE_LIMIT=1000/minute.
+PREDICT_RATE_LIMIT = os.getenv("PREDICT_RATE_LIMIT", "100/minute")
 
 # /version identity — GIT_SHA is injected via a Docker build-arg (see
 # Dockerfile + ci.yml's publish-and-deploy job); falls back to "unknown"
@@ -43,4 +47,3 @@ ENVIRONMENT = os.getenv("ENVIRONMENT", "development")
 # and how many recent requests to retain.
 DRIFT_MIN_SAMPLES = 30
 DRIFT_BUFFER_SIZE = 500
-

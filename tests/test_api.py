@@ -60,8 +60,8 @@ def test_predict_rejects_missing_field(client, valid_customer):
 
 
 def test_predict_rate_limit_triggers_after_threshold(client, valid_customer):
-    """PREDICT_RATE_LIMIT is 30/minute — send 31 rapid requests and confirm
-    the 31st gets throttled (429), not silently accepted."""
-    responses = [client.post("/predict", json=valid_customer) for _ in range(31)]
+    """PREDICT_RATE_LIMIT is 100/minute — send 101 rapid requests and
+    confirm the 101st gets throttled (429), not silently accepted."""
+    responses = [client.post("/predict", json=valid_customer) for _ in range(101)]
     statuses = [r.status_code for r in responses]
     assert 429 in statuses, "Expected at least one 429 after exceeding the rate limit"

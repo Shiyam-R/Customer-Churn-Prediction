@@ -31,18 +31,18 @@ from app.services.prediction_service import predict_churn
 router = APIRouter()
 
 
-@router.post("/predict", response_model=PredictionResponse)
+@router.post("/predict", response_model=PredictionResponse, tags=["Prediction"])
 @limiter.limit(PREDICT_RATE_LIMIT)
 def predict(request: Request, record: CustomerRecord) -> PredictionResponse:
     return predict_churn(record)
 
 
-@router.get("/health", response_model=HealthResponse)
+@router.get("/health", response_model=HealthResponse, tags=["Info"])
 def health() -> HealthResponse:
     return HealthResponse(status="ok", model_loaded=artifacts.loaded)
 
 
-@router.get("/", response_model=RootResponse)
+@router.get("/", response_model=RootResponse, tags=["Info"])
 def root() -> RootResponse:
     return RootResponse(
         name=API_TITLE,
@@ -52,7 +52,7 @@ def root() -> RootResponse:
     )
 
 
-@router.get("/version", response_model=VersionResponse)
+@router.get("/version", response_model=VersionResponse, tags=["Info"])
 def version() -> VersionResponse:
     return VersionResponse(
         api_version=API_VERSION,
@@ -66,6 +66,7 @@ def version() -> VersionResponse:
 @router.get(
     "/drift",
     response_model=DriftResponse,
+    tags=["Monitoring"],
     description=(
         "Reports feature-distribution drift (PSI) between recent live "
         "/predict requests and the training data. SCOPE CAVEAT: live "

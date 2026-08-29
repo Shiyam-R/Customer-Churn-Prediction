@@ -28,6 +28,12 @@ from app.utils.logger import get_logger
 
 logger = get_logger(__name__)
 
+TAGS_METADATA = [
+    {"name": "Info", "description": "Project metadata, health, and version identity."},
+    {"name": "Monitoring", "description": "Feature drift monitoring against training data."},
+    {"name": "Prediction", "description": "Churn prediction with SHAP explainability."},
+]
+
 
 # ── Lifespan ──────────────────────────────────────────────────────────────────
 @asynccontextmanager
@@ -61,6 +67,7 @@ def create_app() -> FastAPI:
         lifespan=lifespan,
         docs_url="/docs",
         redoc_url="/redoc",
+        openapi_tags=TAGS_METADATA,
     )
 
     application.state.limiter = limiter
