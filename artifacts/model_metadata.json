@@ -1,6 +1,6 @@
 {
   "model_version": "1.0.0",
-  "trained_at": "2026-08-29T05:25:17.472030+00:00",
+  "trained_at": "2026-08-30T07:48:12.305875+00:00",
   "test_recall": 0.9198,
   "test_precision": 0.441,
   "threshold": 0.285
