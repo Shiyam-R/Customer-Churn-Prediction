@@ -129,44 +129,62 @@ Top features by mean absolute SHAP value:
 
 `Contract` and `tenure` are the strongest drivers of churn predictions, while the engineered `high_risk_combo` also ranks among the top features, supporting the interaction identified during EDA.
 
-## Project Structure
+## 📁 Project Structure
 
 ```text
 Customer-Churn-Prediction/
 ├── app/
-│   ├── main.py                  # FastAPI application factory + lifespan
-│   ├── config.py                # threshold, rate limit, artifact paths
-│   ├── exceptions.py            # custom exception hierarchy
-│   ├── model_loader.py          # artifact loading singleton
-│   ├── rate_limiter.py          # slowapi Limiter instance
-│   ├── drift_tracker.py         # in-memory live-request buffer + PSI computation
+│   ├── main.py                      # FastAPI application factory + lifespan
+│   ├── config.py                    # Threshold, rate-limit, and artifact configuration
+│   ├── exceptions.py                # Custom exception hierarchy
+│   ├── model_loader.py              # Singleton model/artifact loading
+│   ├── rate_limiter.py              # slowapi Limiter configuration
+│   ├── drift_tracker.py             # In-memory live-request buffer + PSI computation
 │   ├── api/
-│   │   └── routes.py            # /, /health, /version, /drift, /predict
+│   │   └── routes.py                # /predict, /health, /version, and /drift endpoints
 │   ├── schemas/
-│   │   ├── request.py
-│   │   └── response.py
+│   │   ├── request.py               # Pydantic request schema and validation
+│   │   └── response.py              # Pydantic response schemas
 │   ├── services/
-│   │   └── prediction_service.py
+│   │   └── prediction_service.py    # Inference and prediction orchestration
 │   └── utils/
-│       ├── feature_engineering.py
-│       └── logger.py
-├── artifacts/                   # churn_model.json, model_columns.json, model_metadata.json, baseline_stats.json
-├── data/                        # raw and processed data
-├── EDA_plots/                   # exploratory data analysis visualizations
-├── Eval_plots/                  # confusion matrix and SHAP summary
-├── notebook/                    # pipeline scripts: preprocessing → EDA → feature engineering → model selection → tuning → evaluation
-├── tests/                       # pytest suite
-├── load_tests/                  # Locust load testing + measured results
-├── .github/workflows/ci.yml     # CI: lint, test, security audit, Docker build, publish + deploy
-├── Dockerfile                   # multi-stage production image
-├── pytest.ini                   # pytest configuration
-├── requirements.txt             # production dependencies
-├── requirements-dev.txt         # testing and development dependencies
-├── requirements-load.txt        # Locust dependencies
-├── .dockerignore
-├── .gitignore
-├── LICENSE
-└── README.md
+│       ├── feature_engineering.py   # Inference-time feature preparation
+│       └── logger.py                # Application logging utilities
+│
+├── artifacts/
+│   ├── churn_model.json             # Trained XGBoost model
+│   ├── model_columns.json           # Exact training feature columns
+│   ├── model_metadata.json          # Model version and training metadata
+│   └── baseline_stats.json          # Training baseline statistics for drift detection
+│
+├── dashboard/
+│   └── app.py                       # Streamlit dashboard consuming the deployed API
+│                                      # Includes Render-friendly retries and timeouts
+│
+├── tests/                           # Pytest suite (26 tests)
+│
+├── load_tests/
+│   ├── locustfile.py                # Locust load-testing scenarios
+│   └── LOAD_TEST_RESULTS.md         # Measured load-test results and analysis
+│
+├── reports/                         # EDA charts, PR curve, confusion matrices, SHAP summary
+│
+├── prepare_data.py                  # Load, clean, and create stratified train/test split
+├── eda_only.py                      # Exploratory data analysis + univariate sweep
+├── feature_engineering.py           # Training-time encoding and engineered features
+├── model_selection.py               # Logistic Regression vs. XGBoost baseline comparison
+├── hyperparameter_tuning.py         # RandomizedSearchCV tuning for XGBoost
+├── eval_report.py                   # One-time test evaluation + SHAP + artifact generation
+│
+├── .github/
+│   └── workflows/
+│       └── ci.yml                   # Lint, test, security audit, Docker build, publish + deploy
+│
+├── Dockerfile                       # Multi-stage production image
+├── requirements.txt                 # Production dependencies
+├── requirements-dev.txt             # Development dependencies (+ pytest, httpx)
+├── requirements-load.txt            # Load-testing dependencies (+ Locust)
+└── requirements-dashboard.txt       # Dashboard dependencies (+ Streamlit)
 ```
 
 Training scripts and unnecessary development files are excluded from the Docker image through `.dockerignore` — the serving container only needs the application code and trained artifacts required for inference.
