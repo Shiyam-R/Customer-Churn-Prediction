@@ -62,6 +62,8 @@ def evaluate(model, X_val, y_val, name: str, threshold: float = 0.5):
 # Selected on the VALIDATION set only; test set stays untouched until the
 # final eval report, per the train/val/test discipline established in
 # Phase 1 block 2.
+# Earlier validation-stage operating threshold before final hyperparameter tuning.
+# The final production threshold is selected after tuning and is 0.345.
 XGB_THRESHOLD = 0.34
 
 

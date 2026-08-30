@@ -7,7 +7,7 @@ evaluation reveals a problem, at the cost of not using val's extra rows
 in the final model).
 
 Model: XGBoost, tuned hyperparameters from hyperparameter_tuning.py
-Threshold: 0.285, chosen via cost-sensitive analysis (FN cost ~7x FP cost)
+Threshold: 0.345, chosen via cost-sensitive analysis (FN cost ~7x FP cost)
 on the validation set — never touched using test data.
 """
 
@@ -25,7 +25,7 @@ from xgboost import XGBClassifier
 import shap
 from Churn_Feature_engineering import build_feature_sets
 
-FINAL_THRESHOLD = 0.285
+FINAL_THRESHOLD = 0.345
 MODEL_VERSION = "1.0.0"
 BEST_PARAMS = {
     "subsample": 0.8, "n_estimators": 300, "min_child_weight": 3,

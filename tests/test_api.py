@@ -13,7 +13,7 @@ def test_predict_returns_valid_response_shape(client, valid_customer):
     body = resp.json()
     assert body["prediction"] in ("Churn", "No Churn")
     assert 0.0 <= body["churn_probability"] <= 1.0
-    assert body["threshold_used"] == 0.285
+    assert body["threshold_used"] == 0.345
     assert len(body["top_contributing_factors"]) == 5
     for factor in body["top_contributing_factors"]:
         assert "feature" in factor and "shap_value" in factor
@@ -25,7 +25,7 @@ def test_predict_high_risk_profile_flags_churn(client, valid_customer):
     resp = client.post("/predict", json=valid_customer)
     body = resp.json()
     assert body["prediction"] == "Churn"
-    assert body["churn_probability"] > 0.285
+    assert body["churn_probability"] > 0.345
 
 
 def test_predict_low_risk_profile_flags_no_churn(client):
@@ -43,7 +43,7 @@ def test_predict_low_risk_profile_flags_no_churn(client):
     resp = client.post("/predict", json=low_risk)
     body = resp.json()
     assert body["prediction"] == "No Churn"
-    assert body["churn_probability"] < 0.285
+    assert body["churn_probability"] < 0.345
 
 
 def test_predict_rejects_unseen_category(client, valid_customer):
