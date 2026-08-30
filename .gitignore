@@ -13,6 +13,7 @@ __pycache__/
 htmlcov/
 .coverage
 /tmp/loadtest*
+.streamlit/
 
 # NOTE: artifacts/ (churn_model.json, model_columns.json) is intentionally
 # NOT ignored — committed directly per the training/serving separation

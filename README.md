@@ -301,6 +301,17 @@ The test suite covers feature engineering and training-serving consistency, sche
 
 Concurrency and latency testing lives in `load_tests/` (Locust) — separate from `tests/` since it exercises a live running instance rather than mocked components. See [`load_tests/LOAD_TEST_RESULTS.md`](load_tests/LOAD_TEST_RESULTS.md) for setup, measured results, and interpretation.
 
+## Dashboard
+
+```bash
+pip install -r requirements-dashboard.txt
+streamlit run dashboard/app.py
+```
+
+Paste your deployed Render URL into the sidebar (defaults to http://localhost:8000 for local testing against a running API). Calls /health and /version on load to show live model status, /drift in an expandable panel, and /predict on form submission — every categorical field is a dropdown using the exact same Literal values as the API schema, so an invalid category can't be submitted from the UI at all.
+
+Kept intentionally minimal (Streamlit, not a full frontend framework) — matches Phase 1's "kept light, on purpose" scope from the roadmap. Runs server-side, so it never hits CORS the way a static HTML/JS dashboard calling the API from browser JavaScript would.
+
 ## CI/CD
 
 Every push to `main` runs `.github/workflows/ci.yml`:
