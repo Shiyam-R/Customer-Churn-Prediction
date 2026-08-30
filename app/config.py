@@ -23,7 +23,7 @@ BASELINE_STATS_FILE = ARTIFACTS_DIR / "baseline_stats.json"
 
 # Cost-sensitive threshold — FN cost (missed churner) ~7x FP cost (unneeded
 # email), chosen via the sweep in hyperparameter_tuning.py. Not 0.5.
-THRESHOLD = 0.285
+THRESHOLD = 0.345
 
 # Rate limit for /predict — each request runs a real SHAP TreeExplainer
 # computation, not just a cheap predict_proba() call. This is a security/
